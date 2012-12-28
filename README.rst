@@ -7,7 +7,7 @@ This is a port of the `flask-debug-toolbar <https://github.com/mgood/flask-debug
 Installation
 ------------
 
-Sorry.
+See the example.py. Sorry.
 
 Usage
 -----
