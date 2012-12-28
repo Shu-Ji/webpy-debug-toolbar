@@ -11,8 +11,8 @@ try:
 except ImportError:
     HAVE_PYGMENTS = False
 
+import web
 
-from flask import current_app
 
 def format_fname(value):
     # If the value is not an absolute path, the it is a builtin or
@@ -26,8 +26,16 @@ def format_fname(value):
 
     # If the file is absolute and within the project root handle it as
     # a project file
-    if value.startswith(current_app.root_path):
-        return "." + value[len(current_app.root_path):]
+    print value
+    print web.config.proj_root
+    # if on win32 value will be lowercase but web.config.proj_root is not.
+    # e.g. value = e:\desktop\webpy_debugtoolbar
+    # but  web.config.proj_root = 'E:\desktop\webpy_debugtoolbar'
+    if sys.platform == 'win32':
+        value = value.lower()
+        proj_root = web.config.proj_root.lower()
+    if value.startswith(proj_root):
+        return "." + value[len(proj_root):]
 
     # Loop through sys.path to find the longest match and return
     # the relative path from there.

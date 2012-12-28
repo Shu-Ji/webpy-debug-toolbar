@@ -7,8 +7,8 @@ try:
 except ImportError:
     threading = None
 
-from flask_debugtoolbar.panels import DebugPanel
-from flask_debugtoolbar.utils import format_fname
+from webpy_debugtoolbar.panels import DebugPanel
+from webpy_debugtoolbar.utils import format_fname
 
 _ = lambda x: x
 
@@ -64,7 +64,7 @@ class LoggingPanel(DebugPanel):
     name = 'Logging'
     has_content = True
 
-    def process_request(self, request):
+    def process_request(self):
         _init_once()
         handler.clear_records()
 
