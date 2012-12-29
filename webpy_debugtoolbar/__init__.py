@@ -11,6 +11,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.urls import url_quote_plus
 
 from webpy_debugtoolbar.toolbar import DebugToolbar
+from webpy_debugtoolbar.panels import sqla
 
 
 def replace_insensitive(string, target, replacement):
@@ -98,9 +99,11 @@ class DebugToolbarExtension(object):
     @classmethod
     def app_wrapper(cls, urls, g):
         urls = (
-            '/_debug_toolbar/(.*?)', 'WebpyDebugToolbarStaticFileHandler'
+            '/_debug_toolbar/sqla/sql_(select|explain)', 'SqlaHandler',
+            '/_debug_toolbar/(static/.*?)', 'WebpyDebugToolbarStaticFileHandler',
         ) + urls
         g['WebpyDebugToolbarStaticFileHandler'] = DebugToolbarStaticFileHandler
+        g['SqlaHandler'] = sqla.SqlaHandler
         return urls, g
 
     def _show_toolbar(self):

@@ -51,7 +51,10 @@ def format_fname(value):
     path = value[prefix_len:]
     return '<%s>' % path
 
-def format_sql(query, args):
+def format_sql(query, params):
+    for param in params:
+        query = query.replace('?', repr(param), 1)
+
     if not HAVE_PYGMENTS:
         return query
 

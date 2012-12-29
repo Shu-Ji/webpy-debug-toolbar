@@ -37,21 +37,6 @@ web.config.DEBUG_TB_PANELS = {
 
 
 
-# add urls and global static file handler for webpy debug toolbar
-app_wrapper = DebugToolbarExtension.app_wrapper(urls, globals())
-web.config.app = app = web.application(*app_wrapper)
-if web.config.debug:
-    DebugToolbarExtension(app)
-# for session panel
-web.config.session = web.session.Session(app, web.session.DiskStore('session'))
-web.config.session.test_session = ['hello', 'foo']
-# for logging panel
-web.config.proj_root = PROJ_ROOT
-# web.config.SECRET_KEY = '@;TestSqlalchemyPanel!'
-# default is: SECRET_KEY = 'webpy_debugtoolbar_secret'
-
-
-
 # SQLAlchemy settings
 engine = create_engine(
     'sqlite:///tutorial.db',
@@ -70,6 +55,22 @@ Base.metadata.create_all(engine)
 
 
 
+# add urls and global static file handler for webpy debug toolbar
+app_wrapper = DebugToolbarExtension.app_wrapper(urls, globals())
+web.config.app = app = web.application(*app_wrapper)
+if web.config.debug:
+    DebugToolbarExtension(app)
+# for session panel
+web.config.session = web.session.Session(app, web.session.DiskStore('session'))
+web.config.session.test_session = ['hello', 'foo']
+# for logging panel
+web.config.proj_root = PROJ_ROOT
+# for SQLAlchemy panel
+web.config.SECRET_KEY = 'webpy_debugtoolbar_secret'
+web.config.engine = engine
+
+
+
 class index:
     def GET(self):
         # test logger
@@ -79,6 +80,7 @@ class index:
         # test SQLAlchemy
         count = db.query(Account.uid).count()
         name='webpy name %s' % (count + 1)
+        db.query(Account.uid).filter_by(uid=2).first()
         db.add(Account(name=name))
         db.commit()
      

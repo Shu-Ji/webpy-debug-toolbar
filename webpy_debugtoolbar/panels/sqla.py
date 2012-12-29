@@ -87,7 +87,6 @@ class SQLAlchemyDebugPanel(DebugPanel):
             except TypeError:
                 pass # object not JSON serializable
 
-            web.config.setdefault('SECRET_KEY', 'webpy_debugtoolbar_secret')
             hash = hashlib.sha1(
                 web.config.SECRET_KEY +
                 statement + _params).hexdigest()
@@ -105,61 +104,38 @@ class SQLAlchemyDebugPanel(DebugPanel):
 
 # Panel views
 
-#@module.route('/sqlalchemy/sql_select', methods=['GET', 'POST'])
-def sql_select():
-    statement = request.args['sql']
-    params = request.args['params']
+class SqlaHandler:
+    def POST(self, type):
+        i = web.input()
+        statement = i['sql']
+        params = i['params']
 
-    # Validate hash
-    hash = hashlib.sha1(
-        current_app.config['SECRET_KEY'] + statement + params).hexdigest()
-    if hash != request.args['hash']:
-        return abort(406)
+        # Validate hash
+        hash = hashlib.sha1(
+            web.config.SECRET_KEY + statement + params).hexdigest()
+        if hash != i['hash']:
+            return abort(406)
 
-    # Make sure it is a select statement
-    if not statement.lower().strip().startswith('select'):
-        return abort(406)
+        # Make sure it is a select statement
+        if not statement.lower().strip().startswith('select'):
+            return abort(406)
 
-    params = json.loads(params)
+        params = json.loads(params)
+        print params
 
-    engine = SQLAlchemy().get_engine(current_app)
+        engine = web.config.engine
 
-    result = engine.execute(statement, params)
-    return g.debug_toolbar.render('panels/sqlalchemy_select.html', {
-        'result': result.fetchall(),
-        'headers': result.keys(),
-        'sql': format_sql(statement, params),
-        'duration': float(request.args['duration']),
-    })
-
-#@module.route('/sqlalchemy/sql_explain', methods=['GET', 'POST'])
-def sql_explain():
-    statement = request.args['sql']
-    params = request.args['params']
-
-    # Validate hash
-    hash = hashlib.sha1(
-        current_app.config['SECRET_KEY'] + statement + params).hexdigest()
-    if hash != request.args['hash']:
-        return abort(406)
-
-    # Make sure it is a select statement
-    if not statement.lower().strip().startswith('select'):
-        return abort(406)
-
-    params = json.loads(params)
-
-    engine = SQLAlchemy().get_engine(current_app)
-
-    if engine.driver == 'pysqlite':
-        query = 'EXPLAIN QUERY PLAN %s' % statement
-    else:
-        query = 'EXPLAIN %s' % statement
-
-    result = engine.execute(query, params)
-    return g.debug_toolbar.render('panels/sqlalchemy_explain.html', {
-        'result': result.fetchall(),
-        'headers': result.keys(),
-        'sql': format_sql(statement, params),
-        'duration': float(request.args['duration']),
-    })
+        if type == 'explain':
+            if engine.driver == 'pysqlite':
+                statement = 'EXPLAIN QUERY PLAN %s' % statement
+            else:
+                statement = 'EXPLAIN %s' % statement
+            
+        result = engine.execute(statement, params)
+        debugtoolbar = web.config.debug_toolbar
+        return debugtoolbar.render('panels/sqlalchemy_%s.html' % type, {
+            'result': result.fetchall(),
+            'headers': result.keys(),
+            'sql': format_sql(statement, params),
+            'duration': float(i['duration']),
+        })
