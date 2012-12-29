@@ -114,14 +114,13 @@ class SqlaHandler:
         hash = hashlib.sha1(
             web.config.SECRET_KEY + statement + params).hexdigest()
         if hash != i['hash']:
-            return abort(406)
+            raise web.notacceptable()
 
         # Make sure it is a select statement
         if not statement.lower().strip().startswith('select'):
-            return abort(406)
+            raise web.notacceptable()
 
         params = json.loads(params)
-        print params
 
         engine = web.config.engine
 

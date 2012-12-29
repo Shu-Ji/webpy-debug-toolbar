@@ -45,6 +45,7 @@ engine = create_engine(
 )
 # db means the session of sqlalchemy.(To be different from session of web.py)
 db = scoped_session(sessionmaker(bind=engine))
+
 # some models
 Base= declarative_base()
 class Account(Base):
@@ -62,11 +63,11 @@ if web.config.debug:
     DebugToolbarExtension(app)
 # for session panel
 web.config.session = web.session.Session(app, web.session.DiskStore('session'))
-web.config.session.test_session = ['hello', 'foo']
+web.config.session.test_session = ['hello', 'foo']  # just for testing
 # for logging panel
 web.config.proj_root = PROJ_ROOT
 # for SQLAlchemy panel
-web.config.SECRET_KEY = 'webpy_debugtoolbar_secret'
+web.config.SECRET_KEY = 'webpy_debugtoolbar_secret'  # whatever string u like
 web.config.engine = engine
 
 
