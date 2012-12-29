@@ -26,8 +26,6 @@ def format_fname(value):
 
     # If the file is absolute and within the project root handle it as
     # a project file
-    print value
-    print web.config.proj_root
     # if on win32 value will be lowercase but web.config.proj_root is not.
     # e.g. value = e:\desktop\webpy_debugtoolbar
     # but  web.config.proj_root = 'E:\desktop\webpy_debugtoolbar'

@@ -7,7 +7,6 @@ from werkzeug.urls import url_quote_plus
 
 from webpy_debugtoolbar.toolbar import DebugToolbar
 
-_debug_toolbar_path = os.path.dirname(__file__)
 
 def replace_insensitive(string, target, replacement):
     """Similar to string.replace() but is case insensitive
@@ -28,6 +27,41 @@ def _printable(value):
         return value.encode('string_escape')
     else:
         return repr(value)
+
+
+class DebugToolbarStaticFileHandler: 
+    def GET(self, path):
+        import mimetypes
+        import datetime
+        import stat
+        import hashlib
+        _debug_toolbar_path = os.path.dirname(__file__)
+        abspath = os.path.join(_debug_toolbar_path, path)
+        stat_result = os.stat(abspath)
+        modified = datetime.datetime.fromtimestamp(stat_result[stat.ST_MTIME])
+        web.header("Last-Modified", modified)
+
+        mime_type, encoding = mimetypes.guess_type(abspath)
+        if mime_type:
+            web.header("Content-Type", mime_type)
+
+        cache_time = 86400 * 365 * 10
+        web.header("Expires", datetime.datetime.now() + \
+                   datetime.timedelta(seconds=cache_time))
+        web.header("Cache-Control", "max-age=%s" % cache_time)
+
+        ims_value = web.ctx.env.get("HTTP_IF_MODIFIED_SINCE")
+        if ims_value is not None:
+            since = datetime.datetime.strptime(ims_value, '%Y-%m-%d %H:%M:%S')
+            if since >= modified:
+                raise web.notmodified()
+
+        with open(abspath, "rb") as f:
+            data = f.read()
+            hasher = hashlib.sha1()
+            hasher.update(data)
+            web.header("Etag", '"%s"' % hasher.hexdigest())
+            return data
 
 
 class DebugToolbarExtension(object):
@@ -59,6 +93,14 @@ class DebugToolbarExtension(object):
             loader=PackageLoader(__name__, 'templates'))
         self.jinja_env.filters['urlencode'] = url_quote_plus
         self.jinja_env.filters['printable'] = _printable
+
+    @classmethod
+    def app_wrapper(cls, urls, g):
+        urls = (
+            '/_debug_toolbar/(.*?)', 'DebugToolbarStaticFileHandler'
+        ) + urls
+        g['DebugToolbarStaticFileHandler'] = DebugToolbarStaticFileHandler
+        return urls, g
 
     def _show_toolbar(self):
         """Return a boolean to indicate if we need to show the toolbar."""
