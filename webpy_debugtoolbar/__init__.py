@@ -1,4 +1,9 @@
 import os
+import mimetypes
+import datetime
+import stat
+import hashlib
+
 import web
 
 from jinja2 import Environment, PackageLoader
@@ -31,10 +36,6 @@ def _printable(value):
 
 class DebugToolbarStaticFileHandler: 
     def GET(self, path):
-        import mimetypes
-        import datetime
-        import stat
-        import hashlib
         _debug_toolbar_path = os.path.dirname(__file__)
         abspath = os.path.join(_debug_toolbar_path, path)
         stat_result = os.stat(abspath)
@@ -97,9 +98,9 @@ class DebugToolbarExtension(object):
     @classmethod
     def app_wrapper(cls, urls, g):
         urls = (
-            '/_debug_toolbar/(.*?)', 'DebugToolbarStaticFileHandler'
+            '/_debug_toolbar/(.*?)', 'WebpyDebugToolbarStaticFileHandler'
         ) + urls
-        g['DebugToolbarStaticFileHandler'] = DebugToolbarStaticFileHandler
+        g['WebpyDebugToolbarStaticFileHandler'] = DebugToolbarStaticFileHandler
         return urls, g
 
     def _show_toolbar(self):

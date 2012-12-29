@@ -1,6 +1,7 @@
 import urllib
-import web
+import logging
 
+import web
 
 class DebugToolbar(object):
 
@@ -13,9 +14,9 @@ class DebugToolbar(object):
             'webpy_debugtoolbar.panels.timer.TimerDebugPanel',
             'webpy_debugtoolbar.panels.headers.HeaderDebugPanel',
             'webpy_debugtoolbar.panels.request_vars.RequestVarsDebugPanel',
-            'webpy_debugtoolbar.panels.template.TemplateDebugPanel',
-            'webpy_debugtoolbar.panels.sqlalchemy.SQLAlchemyDebugPanel',
             'webpy_debugtoolbar.panels.logger.LoggingPanel',
+            'webpy_debugtoolbar.panels.template.TemplateDebugPanel',
+            'webpy_debugtoolbar.panels.sqla.SQLAlchemyDebugPanel',
         )
     }
     panel_classes = []
@@ -31,16 +32,15 @@ class DebugToolbar(object):
         web.config.DEBUG_TB_PANELS = cls.config
 
         for panel_path in cls.config['DEBUG_TB_PANELS']:
-            dot = panel_path.rindex('.')
-            panel_module, panel_classname = panel_path[:dot], panel_path[dot+1:]
-
+            panel_module, panel_clsname = panel_path.rsplit('.', 1)
             try:
                 mod = __import__(panel_module, {}, {}, [''])
             except ImportError, e:
-                print 'Disabled %s due to ImportError: %s' % (panel_classname, e)
-                continue
-            panel_class = getattr(mod, panel_classname)
-            cls.panel_classes.append(panel_class)
+                logging.warning(
+                    'Disabled %s due to ImportError: %s' % (panel_clsname, e))
+            else:
+                panel_class = getattr(mod, panel_clsname)
+                cls.panel_classes.append(panel_class)
 
     def create_panels(self):
         """
