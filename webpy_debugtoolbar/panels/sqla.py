@@ -31,22 +31,6 @@ def after_cursor_execute(conn, cursor, statement,
 _ = lambda x: x
 
 
-def _calling_context(app_path):
-    import sys
-    frm = sys._getframe(1)
-    while frm.f_back is not None:
-        name = frm.f_globals.get('__name__')
-        if name and (name == app_path or name.startswith(app_path + '.')):
-            funcname = frm.f_code.co_name
-            return '%s:%s (%s)' % (
-                frm.f_code.co_filename,
-                frm.f_lineno,
-                funcname
-            )
-        frm = frm.f_back
-    return '<unknown>'
-
-
 class SQLAlchemyDebugPanel(DebugPanel):
     """
     Panel that displays the time a response took in milliseconds.
@@ -100,7 +84,7 @@ class SQLAlchemyDebugPanel(DebugPanel):
                 'is_select': is_select,
             })
         web.config.debug_toolbar_queries = []
-        return self.render('panels/sqlalchemy.html', { 'queries': data})
+        return self.render('panels/sqlalchemy.html', {'queries': data})
 
 # Panel views
 
@@ -132,9 +116,10 @@ class SqlaHandler:
             
         result = engine.execute(statement, params)
         debugtoolbar = web.config.debug_toolbar
-        return debugtoolbar.render('panels/sqlalchemy_%s.html' % type, {
+        return debugtoolbar.render('panels/sqla_result.html', {
             'result': result.fetchall(),
             'headers': result.keys(),
             'sql': format_sql(statement, params),
             'duration': float(i['duration']),
+            'type': type,
         })

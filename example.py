@@ -81,7 +81,7 @@ class index:
         # test SQLAlchemy
         count = db.query(Account.uid).count()
         name='webpy name %s' % (count + 1)
-        db.query(Account.uid).filter_by(uid=2).first()
+        db.query(Account.uid).filter_by(uid=1).first()
         db.add(Account(name=name))
         db.commit()
      
